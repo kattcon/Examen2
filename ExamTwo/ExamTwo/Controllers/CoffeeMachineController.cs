@@ -34,11 +34,16 @@ namespace ExamTwo.Controllers
         [HttpPost("buyCoffee")]
         public ActionResult<string> BuyCoffee([FromBody] OrderRequest request)
         {
+            // quitar
+            /**
             if (request.Order == null || request.Order.Count == 0)
                 return BadRequest("Ordem vacia.");
 
             if (request.Payment.TotalAmount <= 0)
-                return BadRequest("Dinero insuficiente ");
+                return BadRequest("Dinero insuficiente ");*/
+            var validationResult = ValidateBuyCoffee(request);
+            if (validationResult.Result is not OkResult)
+                return validationResult;
 
             try
             {
@@ -90,19 +95,23 @@ namespace ExamTwo.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        
+        public ActionResult<string> ValidateBuyCoffee([FromBody] OrderRequest request)
+        {
+            if (request.Order == null || request.Order.Count == 0)
+            {
+                return BadRequest("Ordem vacia.");
+            }
+            else if (request.Payment.TotalAmount <= 0)
+            {
+                return BadRequest("Dinero insuficiente ");
+            }
+            return Ok();
+        }
+        
     }
 
-    /**
-    public class OrderRequest
-    {
-        public Dictionary<string, int> Order { get; set; }
-        public Payment Payment { get; set; }
-    }
+    
 
-    public class Payment
-    {
-        public int TotalAmount { get; set; }
-        public List<int> Coins { get; set; }
-        public List<int> Bills { get; set; }
-    }*/
 }
