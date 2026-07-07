@@ -24,7 +24,7 @@ public class UnitTestingCoffeeMachine
         Assert.Equal("Orden vacía.", badRequest.Value);
     }
 
-        [Fact]
+    [Fact]
     public void BuyCoffee_InsufficientPayment_ReturnsBadRequest()
     {
         // Arrange
@@ -42,5 +42,25 @@ public class UnitTestingCoffeeMachine
         // Assert
         var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
         Assert.Equal("Dinero insuficiente.", badRequest.Value);
+    }
+
+    [Fact]
+    public void BuyCoffee_ValidOrderWithEnoughPayment_ReturnsOk()
+    {
+        // Arrange
+        var db = new Database();
+        var controller = new CoffeeMachineController(db);
+        var request = new OrderRequest
+        {
+            Order = new Dictionary<string, int> { { "Americano", 1 } },
+            Payment = new Payment { TotalAmount = 1000 }
+        };
+
+        // Act
+        var result = controller.BuyCoffee(request);
+
+        // Assert
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        Assert.Contains("vuelto", ok.Value!.ToString());
     }
 }
