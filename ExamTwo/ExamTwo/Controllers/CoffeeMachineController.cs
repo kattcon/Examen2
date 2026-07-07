@@ -13,6 +13,7 @@ namespace ExamTwo.Controllers
             _db = db;
         }
 
+        // esta
         [HttpGet("getCoffees")]
         public ActionResult<Dictionary<string, int>> GetCoffeePrices()
         {
@@ -34,61 +35,51 @@ namespace ExamTwo.Controllers
         [HttpPost("buyCoffee")]
         public ActionResult<string> BuyCoffee([FromBody] OrderRequest request)
         {
-            // quitar
-            /**
             if (request.Order == null || request.Order.Count == 0)
-                return BadRequest("Ordem vacia.");
+                return BadRequest("Orden vacía.");
 
             if (request.Payment.TotalAmount <= 0)
-                return BadRequest("Dinero insuficiente ");*/
-            var validationResult = ValidateBuyCoffee(request);
-            if (validationResult.Result is not OkResult)
-                return validationResult;
+                return BadRequest("Dinero insuficiente.");
 
             try
             {
-                var costoTotal = request.Order.Sum(o => _db.keyValues2.First(c => c.Key == o.Key).Value * o.Value);
-
-                if (request.Payment.TotalAmount < costoTotal)
-                { 
-                    return BadRequest("Dinero insuficiente ");
-                }
-
-
-                foreach (var cafe in request.Order)
+                foreach (var item in request.Order)
                 {
-                    var selected = _db.keyValues.First(c => c.Key == cafe.Key).Key;
-                    if (cafe.Value > _db.keyValues[selected])
-                    {
-                        return $"No hay suficientes {selected} en la máquina.";
-                    }
-                    _db.keyValues[selected] -= cafe.Value;
+                    if (!_db.keyValues2.ContainsKey(item.Key))
+                        return BadRequest($"Café desconocido: {item.Key}.");
                 }
 
-                var change = request.Payment.TotalAmount - costoTotal;
-                String result = $"Su vuelto es de: {change} colones. Desglose:";
+                var totalCost = request.Order.Sum(o => _db.keyValues2[o.Key] * o.Value);
+
+                if (request.Payment.TotalAmount < totalCost)
+                    return BadRequest("Dinero insuficiente.");
+
+                foreach (var coffee in request.Order)
+                {
+                    if (coffee.Value > _db.keyValues[coffee.Key])
+                        return BadRequest($"No hay suficientes {coffee.Key} en la máquina.");
+                }
+
+                foreach (var coffee in request.Order)
+                    _db.keyValues[coffee.Key] -= coffee.Value;
+
+                var change = request.Payment.TotalAmount - totalCost;
+                var result = $"Su vuelto es de: {change} colones. Desglose:";
 
                 foreach (var coin in _db.keyValues3.Keys.OrderByDescending(c => c))
                 {
                     var count = Math.Min(change / coin, _db.keyValues3[coin]);
                     if (count > 0)
                     {
-                        result +=  $" {count} moneda de {coin},  ";              
+                        result += $" {count} moneda de {coin},";
                         change -= coin * count;
                     }
                 }
 
-
                 if (change > 0)
-                {
                     return StatusCode(500, "No hay suficiente cambio en la máquina.");
-                }
 
                 return Ok(result);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -96,22 +87,10 @@ namespace ExamTwo.Controllers
             }
         }
 
-        
-        public ActionResult<string> ValidateBuyCoffee([FromBody] OrderRequest request)
-        {
-            if (request.Order == null || request.Order.Count == 0)
-            {
-                return BadRequest("Ordem vacia.");
-            }
-            else if (request.Payment.TotalAmount <= 0)
-            {
-                return BadRequest("Dinero insuficiente ");
-            }
-            return Ok();
-        }
-        
+
     }
 
+      
     
 
 }
