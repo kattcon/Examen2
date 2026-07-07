@@ -10,6 +10,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<Database>();
+builder.Services.AddSingleton<CoffeeMachineRepository>();
 
 var app = builder.Build();
 
